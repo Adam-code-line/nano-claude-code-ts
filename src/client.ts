@@ -1,4 +1,4 @@
-import { HttpClient } from './httpclient';
+import { HttpClient } from './httpClient.ts';
 
 export class ClaudeClient {
   private baseURL: string;
