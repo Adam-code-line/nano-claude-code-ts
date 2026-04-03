@@ -8,4 +8,11 @@ export class Message {
     this.role = role;
     this.content = content;
   }
+
+  toAPIFormat(): { role: string; content: string } {
+    return {
+      role: this.role,
+      content: this.content,
+    };
+  }
 }

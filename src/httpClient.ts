@@ -12,7 +12,8 @@ export class HttpClient {
     return this.handleResponse(response);
   }
 
-  async post(url: string, data: any, headers: Record<string, string> = {}) {
+  // 增加泛型，让调用者可以指定返回数据的类型，提升类型安全性
+  async post<T>(url: string, data: any, headers: Record<string, string> = {}) {
     const response = await fetch(url, {
       method: 'POST',
       headers: {
@@ -21,7 +22,7 @@ export class HttpClient {
       },
       body: JSON.stringify(data),
     });
-    return this.handleResponse(response);
+    return this.handleResponse(response) as Promise<T>;
   }
 
   private async handleResponse(response: Response) {

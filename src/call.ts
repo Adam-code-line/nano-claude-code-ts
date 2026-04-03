@@ -1,34 +1,39 @@
 // 将请求头等封装在此处
 import { Message } from './message.ts';
+import { HttpClient } from './httpClient.ts';
+import { RequestBody, RequestHeader } from './types/request.ts';
+import { ResponseBody } from './types/response.ts';
 
-// 定义请求头类型
-export interface RequestHeader {
-  'x-api-key': string;
-  'anthropic-version': string;
-  'Content-Type': 'application/json';
-}
+export class ClaudeCall {
+  private httpClient: HttpClient;
 
-// 定义请求体类型
-export interface RequestBody {
-  model: string;
-  max_tokens: number;
-  messages: Message[];
-  system?: string;
-}
+  constructor(httpClient: HttpClient) {
+    this.httpClient = httpClient;
+  }
 
-// 定义响应体类型
-export interface ResponseBody {
-  id: string;
-  type: 'message';
-  role: 'assistant';
-  content: Array<{
-    type: 'text';
-    text: string;
-  }>;
-  model: string;
-  stop_reason: 'end_turn' | 'max_tokens' | 'stop_sequence' | null;
-  usage: {
-    input_tokens: number;
-    output_tokens: number;
-  };
+  async callClaude(url: string, apiKey: string, requestBody: RequestBody): Promise<ResponseBody> {
+    const headers: RequestHeader = {
+      'x-api-key': apiKey,
+      'anthropic-version': '2024-06-01',
+      'Content-Type': 'application/json',
+    };
+
+    const apiMessage = requestBody.messages.map((msg) => {
+      return msg instanceof Message ? msg.toAPIFormat() : new Message('user', msg).toAPIFormat();
+    });
+
+    const body = {
+      model: requestBody.model,
+      messages: apiMessage,
+      max_tokens: requestBody.max_tokens,
+    };
+
+    try {
+      const response = await this.httpClient.post(url, body, headers);
+      return response as ResponseBody;
+    } catch (error) {
+      console.error('Error calling Claude API:', error);
+      throw error;
+    }
+  }
 }
