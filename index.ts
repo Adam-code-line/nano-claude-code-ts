@@ -20,9 +20,7 @@ async function test() {
   try {
     const response = await claude.call({
       model: 'claude-sonnet-4.6',
-      messages: [
-        { role: 'user', content: 'Hello, Claude!' },
-      ],
+      messages: [{ role: 'user', content: 'Hello, Claude!' }],
       max_tokens: 100,
     });
     console.log('Claude API Response:', response);
