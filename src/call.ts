@@ -55,4 +55,73 @@ export class ClaudeCall {
       throw error;
     }
   }
+
+  //实现流式传输
+  async callClaudeStream(
+    url: string,
+    apiKey: string,
+    requestBody: RequestBody,
+    conversation: Conversation,
+    onData: (data: string) => void,
+  ): Promise<void> {
+    const headers: RequestHeader = {
+      'x-api-key': apiKey,
+      'anthropic-version': '2024-06-01',
+    };
+
+    requestBody.messages.forEach((msg) => {
+      const messageInstance = msg instanceof Message ? msg : new Message(msg.role, msg.content);
+      conversation.addMessage(messageInstance);
+    });
+
+    const messageForAPI = conversation.history.map((msg) => ({
+      role: msg.role,
+      content: msg.content,
+    }));
+
+    const body = {
+      model: requestBody.model || 'claude-sonnet-4.6',
+      messages: messageForAPI,
+      max_tokens: requestBody.max_tokens,
+      system: requestBody.system || '',
+      stream: true,
+    };
+
+    // 维护一个临时字符串，用于拼接流式传输的数据
+    let accumulatedResponse = '';
+    let buffer = ''; // 用于存储未处理完的流数据
+
+    try {
+      await this.httpClient.postStream(url, body, headers, (chunk) => {
+        buffer += chunk; // 将新数据追加到缓冲区
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || ''; // 将最后一行保留在缓冲区，等待下一次数据到来，如果最后一行是完整的，则buffer会被清空
+        for (const line of lines) {
+          if (line.trim() === '') continue; // 跳过空行
+          const trimmedLine = line.trim();
+          if (!trimmedLine.startsWith('data: ')) continue;
+          const jsonStr = trimmedLine.replace(/^data: /, '');
+          if (jsonStr === '[DONE]') continue; // 处理流式传输结束的标志
+          try {
+            const event = JSON.parse(jsonStr);
+
+            //claude协议中的文字增量存在于 content_block_delta 事件中
+            if (event.type === 'content_block_delta' && event.delta?.text) {
+              accumulatedResponse += event.delta.text;
+              onData(event.delta.text); // 将增量文本传递给回调函数
+            }
+          } catch (error) {
+            console.error('Error parsing SSE chunk:', error);
+          }
+        }
+      });
+      if (accumulatedResponse) {
+        const assistantMessage = new Message('assistant', accumulatedResponse);
+        conversation.addMessage(assistantMessage);
+      }
+    } catch (error) {
+      console.error('Error calling Claude API:', error);
+      throw error;
+    }
+  }
 }

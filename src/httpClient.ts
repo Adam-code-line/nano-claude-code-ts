@@ -46,6 +46,56 @@ export class HttpClient {
     }
   }
 
+  // 提供流式传输POST请求方法，使用原生fetch的ReadableStream来处理流式响应
+  async postStream(
+    url: string,
+    data: any,
+    headers: Record<string, string> = {},
+    onData: (chunk: string) => void,
+    timeout: number = 10000,
+  ): Promise<void> {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeout); // 设置请求超时时间为10秒
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...headers,
+        },
+        body: JSON.stringify(data),
+        signal: controller.signal, // 关联 AbortController 的 signal
+      });
+
+      clearTimeout(timeoutId); // 请求完成后清除超时定时器
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+      }
+
+      const reader = response.body?.getReader();
+      if (!reader) {
+        throw new Error('无法获取响应流');
+      }
+
+      const decoder = new TextDecoder();
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        const chunk = decoder.decode(value, { stream: true });
+        onData(chunk);
+      }
+    } catch (error) {
+      clearTimeout(timeoutId); // 请求失败时也清除超时定时器
+      if (error instanceof DOMException && error.name === 'AbortError') {
+        console.error('HTTP POST 请求超时:', error);
+        throw new Error('请求超时，请稍后再试');
+      }
+      console.error('HTTP POST 请求失败:', error);
+      throw error;
+    }
+  }
+
   async get<T>(
     url: string,
     headers: Record<string, string> = {},

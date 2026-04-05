@@ -35,4 +35,14 @@ export class ClaudeClient {
     const activeConv = conversation || this.defaultConversation;
     return this.caller.callClaude(this.baseURL, this.apiKey, requestBody, activeConv);
   }
+
+  //提供一个公共方法，让用户可以使用callStream()方法调用Claude API的流式接口
+  async callStream(
+    requestBody: RequestBody,
+    onData: (chunk: string) => void,
+    conversation?: Conversation,
+  ): Promise<void> {
+    const activeConv = conversation || this.defaultConversation;
+    return this.caller.callClaudeStream(this.baseURL, this.apiKey, requestBody, onData, activeConv);
+  }
 }
