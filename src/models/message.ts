@@ -1,12 +1,18 @@
 // 定义claude信息类
+import { ContentBlock } from '../types/response.ts';
 
 export class Message {
   role: 'user' | 'assistant' | 'system';
-  content: string;
+  content: string | ContentBlock[];
 
-  constructor(role: 'user' | 'assistant' | 'system', content: string) {
+  constructor(role: 'user' | 'assistant' | 'system', content: string | ContentBlock[]) {
     this.role = role;
     this.content = content;
+  }
+
+  //静态工具，将ResponseBody转换为Message对象
+  static fromResponseContent(res: ResponseBody): Message {
+    return new Message(res.role, res.content);
   }
 
   toAPIFormat(): { role: string; content: string } {

@@ -17,19 +17,25 @@ export class ClaudeCall {
     apiKey: string,
     requestBody: RequestBody,
     conversation: Conversation,
-  ): Promise<ResponseBody> {
+  ): Promise<string> {
     const headers: RequestHeader = {
       'x-api-key': apiKey,
       'anthropic-version': '2024-06-01',
     };
 
-    const apiMessage = requestBody.messages.map((msg) => {
-      return msg instanceof Message ? msg.toAPIFormat() : new Message('user', msg).toAPIFormat();
+    requestBody.messages.forEach((msg) => {
+      const messageInstance = msg instanceof Message ? msg : new Message(msg.role, msg.content);
+      conversation.addMessage(messageInstance);
     });
+
+    const messageForAPI = conversation.history.map((msg) => ({
+      role: msg.role,
+      content: msg.content,
+    }));
 
     const body = {
       model: requestBody.model || 'claude-sonnet-4.6',
-      messages: apiMessage,
+      messages: messageForAPI,
       max_tokens: requestBody.max_tokens,
       system: requestBody.system || '',
     };
@@ -38,7 +44,11 @@ export class ClaudeCall {
       const response = await this.httpClient.post(url, body, headers);
       // 接收repsponse并提取文本内容,在httpclient中已经处理了json解析和错误处理
       const responseData = response as ResponseBody;
-      conversation.resMessages.push(responseData);
+      conversation.rawResponses.push(responseData);
+
+      const assistantMessage = new Message(responseData.role, responseData.content);
+      conversation.addMessage(assistantMessage);
+
       return conversation.getLatestTextContent();
     } catch (error) {
       console.error('Error calling Claude API:', error);

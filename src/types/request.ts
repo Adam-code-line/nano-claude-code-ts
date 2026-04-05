@@ -1,4 +1,6 @@
 // 定义请求头类型
+import { Message } from '../models/message.ts';
+
 export interface RequestHeader {
   'x-api-key': string;
   'anthropic-version': string;

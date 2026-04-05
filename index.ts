@@ -5,6 +5,7 @@ dotenv.config();
 
 // 导入 ClaudeClient 类
 import { ClaudeClient } from './src/client.ts';
+import { Conversation } from './src/models/conversation.ts';
 
 // 从环境变量中获取 Claude API 的基础 URL 和 API 密钥
 const baseURL = process.env.CLAUDE_BASE_URL;
