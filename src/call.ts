@@ -36,6 +36,7 @@ export class ClaudeCall {
       'x-api-key': this.apiKey,
       'anthropic-version': this.API_VERSION,
       Authorization: `Bearer ${this.apiKey}`,
+      'Content-Type': 'application/json',
     };
 
     // 1. 同步当前请求的消息到本地对话历史（如果是新消息）

@@ -28,7 +28,6 @@ export class HttpClient {
         ...options,
         signal: controller.signal, // 将AbortController的signal传递给fetch，以便在超时时取消请求
         headers: {
-          'Content-Type': 'application/json',
           ...options.headers,
         },
       });
