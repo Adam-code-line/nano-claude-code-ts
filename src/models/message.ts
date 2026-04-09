@@ -2,10 +2,10 @@
 import { ContentBlock } from '../types/response.ts';
 
 export class Message {
-  role: 'user' | 'assistant' | 'system';
+  role: 'user' | 'assistant';
   content: string | ContentBlock[];
 
-  constructor(role: 'user' | 'assistant' | 'system', content: string | ContentBlock[]) {
+  constructor(role: 'user' | 'assistant', content: string | ContentBlock[]) {
     this.role = role;
     this.content = content;
   }

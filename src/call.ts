@@ -4,7 +4,6 @@ import { HttpClient } from './httpClient.ts';
 import { RequestBody, RequestHeader } from './types/request.ts';
 import { ResponseBody } from './types/response.ts';
 import { Conversation } from './models/conversation.ts';
-import { StreamOptions } from './types/stream.ts';
 
 export class ClaudeCall {
   private httpClient: HttpClient;
@@ -18,28 +17,19 @@ export class ClaudeCall {
     apiKey: string,
     requestBody: RequestBody,
     conversation: Conversation,
-    options: StreamOptions = { stream: false },
   ): Promise<string | void> {
-    const { endpoint, headers, body } = this.prepareContext(apiKey, requestBody, conversation);
+    const ctx = this.prepareContext(apiKey, requestBody, conversation);
+    return this.callClaude(ctx.endpoint, ctx.body, ctx.headers, conversation);
+  }
 
-    try {
-      if (options.stream) {
-        // 如果提供了 onData 回调，使用流式处理
-        return await this.callClaudeStream(
-          endpoint,
-          { ...body, stream: true },
-          headers,
-          conversation,
-          options.onData,
-        );
-      } else {
-        // 否则使用普通的非流式处理
-        return await this.callClaude(endpoint, { ...body, stream: false }, headers, conversation);
-      }
-    } catch (error) {
-      console.error('出现callClaude错误:', error);
-      throw error;
-    }
+  async callStream(
+    apiKey: string,
+    requestBody: RequestBody,
+    conversation: Conversation,
+    onData: (data: string) => void,
+  ): Promise<void> {
+    const ctx = this.prepareContext(apiKey, { ...requestBody, stream: true }, conversation);
+    return this.callClaudeStream(ctx.endpoint, ctx.body, ctx.headers, conversation, onData);
   }
 
   private prepareContext(apiKey: string, requestBody: RequestBody, conversation: Conversation) {
@@ -81,7 +71,7 @@ export class ClaudeCall {
   // 实现普通的非流式调用
   private async callClaude(
     endpoint: string,
-    body: any,
+    body: RequestBody,
     headers: RequestHeader,
     conversation: Conversation,
   ): Promise<string> {
@@ -103,7 +93,7 @@ export class ClaudeCall {
   //实现流式传输
   async callClaudeStream(
     endpoint: string,
-    body: any,
+    body: RequestBody,
     headers: RequestHeader,
     conversation: Conversation,
     onData: (data: string) => void,
