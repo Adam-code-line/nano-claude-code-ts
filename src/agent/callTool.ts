@@ -81,13 +81,18 @@ export async function callWithTools(
 ): Promise<ToolLoopResult> {
   const conversation = options.conversation ?? new Conversation();
   const tools = resolveTools(request, options);
-  const tool_choice = resolveToolChoice(request, options);
+  const initialToolChoice = resolveToolChoice(request, options);
   const maxTurns = options.maxTurns ?? 8;
 
   let latestText = '';
   let messagesToSync: MessageParam[] = request.messages;
 
   for (let turn = 1; turn <= maxTurns; turn++) {
+    // 如果用户用 tool_choice 强制指定工具（例如测试里强制 weather），
+    // 那么在 tool_result 回传后继续强制会导致模型每轮都必须再次 tool_use，进入死循环。
+    // 所以后续轮次统一回退到 auto，让模型有机会结束回合并返回最终回答。
+    const tool_choice = turn === 1 ? initialToolChoice : ({ type: 'auto' } as const);
+
     latestText = await client.call(
       {
         ...request,
@@ -118,12 +123,14 @@ export async function callStreamWithTools(
 ): Promise<ToolLoopResult> {
   const conversation = options.conversation ?? new Conversation();
   const tools = resolveTools(request, options);
-  const tool_choice = resolveToolChoice(request, options);
+  const initialToolChoice = resolveToolChoice(request, options);
   const maxTurns = options.maxTurns ?? 8;
 
   let messagesToSync: MessageParam[] = request.messages;
 
   for (let turn = 1; turn <= maxTurns; turn++) {
+    const tool_choice = turn === 1 ? initialToolChoice : ({ type: 'auto' } as const);
+
     await client.callStream(
       {
         ...request,
@@ -149,7 +156,7 @@ export async function callStreamWithTools(
 
 /**
  * 仅执行本地工具（不走 Claude）
- * 保留这个函数，方便你在单测里直接验证 handler/executeTool。
+ * 保留这个函数，方便在单测里直接验证 handler/executeTool。
  */
 export async function callTool(toolName: string, input: any): Promise<any> {
   return executeTool(toolName, input);
