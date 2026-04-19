@@ -10,13 +10,15 @@ export interface MessageParam {
   content: string | Array<ContentBlock>;
 }
 
-export interface RequestHeader {
+// 说明：这里让 RequestHeader 具备 string index signature，
+// 以便能直接传给 HttpClient（其 headers 类型是 Record<string, string>）。
+export type RequestHeader = Record<string, string> & {
   'x-api-key': string;
   'anthropic-version': string;
   'anthropic-beta'?: string;
   Authorization?: string;
   'Content-Type': 'application/json';
-}
+};
 
 export type SystemContentBlock = SystemTextBlock | SystemImageBlock | SystemDocumentBlock;
 

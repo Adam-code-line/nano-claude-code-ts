@@ -1,5 +1,5 @@
 // 引入响应体
-import { ResponseBody } from '../types/response.ts';
+import type { ContentBlock, ResponseBody, TextBlock } from '../types/response.ts';
 import { Message } from './message.ts';
 
 export class Conversation {
@@ -34,8 +34,11 @@ export class Conversation {
     if (typeof content === 'string') {
       return content;
     } else if (Array.isArray(content)) {
+      const isTextBlock = (block: ContentBlock): block is TextBlock =>
+        block.type === 'text' && typeof (block as any).text === 'string' && !!(block as any).text;
+
       return content
-        .filter((block) => block.type === 'text' && block.text)
+        .filter(isTextBlock)
         .map((block) => block.text)
         .join('\n');
     }
