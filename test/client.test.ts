@@ -11,11 +11,11 @@ describe('ClaudeClient', () => {
       .mockResolvedValue('Mocked response from Claude API');
 
     // 创建一个ClaudeClient实例
-    const client = ClaudeClient.newClaudeClient('https://api.claude.ai', 'fake-api-key');
+    const client = ClaudeClient.newClaudeClient('https://api.anthropic.com', 'fake-api-key');
 
     // 请求
     const result = await client.call({
-      model: 'claude-4.6-sonnet',
+      model: 'claude-sonnet-4-6',
       messages: [new Message('user', 'Hello, Claude!')],
       max_tokens: 100,
     });

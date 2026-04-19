@@ -1,10 +1,17 @@
-//定义content类型
-export type ContentBlock = TextBlock | ThinkingBlock | ToolUseBlock;
+// 定义 content block 类型（会持续演进，这里保留 Unknown 兜底）
+export type ContentBlock =
+  | TextBlock
+  | ThinkingBlock
+  | ToolUseBlock
+  | ToolResultBlock
+  | ServerToolUseBlock
+  | UnknownContentBlock;
 
 /** 标准文本块 */
 export interface TextBlock {
   type: 'text';
   text: string;
+  citations?: Array<Citation>;
 }
 
 /** * [2026 核心更新] 思维块
@@ -29,6 +36,28 @@ export interface ToolUseBlock {
   input: Record<string, any>;
 }
 
+/** 工具结果块（由你执行工具后回传给 Claude） */
+export interface ToolResultBlock {
+  type: 'tool_result';
+  tool_use_id: string;
+  content: string | Array<ContentBlock>;
+  is_error?: boolean;
+}
+
+/** Server tools 调用块（由 Claude 平台执行） */
+export interface ServerToolUseBlock {
+  type: 'server_tool_use';
+  id: string;
+  name: string;
+  input: Record<string, any>;
+}
+
+/** 兜底：兼容新/未建模的 block 类型（例如某些 server tool 的 result block） */
+export interface UnknownContentBlock {
+  type: string;
+  [key: string]: any;
+}
+
 // 定义引用类型
 export interface Citation {
   type: 'char_location' | 'page_location';
@@ -48,12 +77,23 @@ export interface ResponseBody {
   role: 'assistant';
   content: Array<ContentBlock>;
   model: string;
-  stop_reason: 'end_turn' | 'max_tokens' | 'stop_sequence' | null;
+  stop_reason:
+    | 'end_turn'
+    | 'max_tokens'
+    | 'stop_sequence'
+    | 'tool_use'
+    | 'pause_turn'
+    | 'refusal'
+    | 'model_context_window_exceeded'
+    | null;
+  stop_sequence: string | null;
   usage: {
     input_tokens: number;
     output_tokens: number;
     cache_creation_input_tokens?: number;
     cache_creation_output_tokens?: number;
+    cache_read_input_tokens?: number;
+    cache_read_output_tokens?: number;
   };
   container?: {
     id: string;

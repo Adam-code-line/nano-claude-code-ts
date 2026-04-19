@@ -1,6 +1,6 @@
 // 引入响应体
-import { ResponseBody } from '../types/response';
-import { Message } from './message';
+import { ResponseBody } from '../types/response.ts';
+import { Message } from './message.ts';
 
 export class Conversation {
   history: Message[] = [];

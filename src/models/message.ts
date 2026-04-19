@@ -1,6 +1,6 @@
-// 定义claude信息类
-import { ContentBlock } from '../types/response.ts';
-import { ResponseBody } from '../types/response.ts';
+// 定义 claude 消息类
+import { MessageParam } from '../types/request.ts';
+import { ContentBlock, ResponseBody } from '../types/response.ts';
 
 export class Message {
   role: 'user' | 'assistant';
@@ -16,7 +16,7 @@ export class Message {
     return new Message(res.role, res.content);
   }
 
-  toAPIFormat(): { role: string; content: string } {
+  toAPIFormat(): MessageParam {
     return {
       role: this.role,
       content: this.content,

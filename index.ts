@@ -13,14 +13,14 @@ const apiKey = process.env.CLAUDE_API_KEY;
 
 // 创建 ClaudeClient 实例
 
-const claude = ClaudeClient.newClaudeClient(baseURL, apiKey);
+const claude = ClaudeClient.newClaudeClient(baseURL as string, apiKey as string);
 
 // 使用call方法调用Claude API
 
 async function test() {
   try {
     const response = await claude.call({
-      model: 'claude-4.6-sonnet',
+      model: 'claude-sonnet-4-6',
       messages: [{ role: 'user', content: 'Hello, Claude!' }],
       max_tokens: 100,
     });
