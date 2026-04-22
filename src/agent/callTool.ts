@@ -6,6 +6,7 @@ import type { Tool } from '../types/tools.ts';
 import { ClaudeClient } from '../llm/client.ts';
 import { Conversation } from '../models/conversation.ts';
 import { executeTool } from '../tools/execute.ts';
+import { initTools } from '../tools/init.ts';
 import { getToolsForRequest, sanitizeToolsForRequest } from '../tools/registry.ts';
 
 export interface ToolLoopOptions {
@@ -79,6 +80,7 @@ export async function callWithTools(
   request: RequestBody,
   options: ToolLoopOptions = {},
 ): Promise<ToolLoopResult> {
+  initTools();
   const conversation = options.conversation ?? new Conversation();
   const tools = resolveTools(request, options);
   const initialToolChoice = resolveToolChoice(request, options);
@@ -121,6 +123,7 @@ export async function callStreamWithTools(
   onData: (chunk: string) => void,
   options: ToolLoopOptions = {},
 ): Promise<ToolLoopResult> {
+  initTools();
   const conversation = options.conversation ?? new Conversation();
   const tools = resolveTools(request, options);
   const initialToolChoice = resolveToolChoice(request, options);

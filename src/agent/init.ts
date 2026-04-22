@@ -1,24 +1,22 @@
-// agent初始化
 import { initConfig } from '../config/init.ts';
 import { ClaudeClient } from '../llm/client.ts';
 import { callWithTools, callStreamWithTools } from './callTool.ts';
-import '../tools/registry.ts';
+import { initTools } from '../tools/init.ts';
 
 export async function initAgent() {
   const config = await initConfig();
-  const claudeClient = new ClaudeClient(config.claudeBaseUrl, config.claudeApiKey);
+  initTools();
+
+  const client = ClaudeClient.newClaudeClient(config.claudeBaseUrl, config.claudeApiKey);
+
   return {
-    claudeClient,
+    client,
     config,
     async run(userText: string) {
       return callWithTools(client, {
         model: config.claudeModel,
-        messages: [
-          {
-            role: 'user',
-            content: userText,
-          },
-        ],
+        messages: [{ role: 'user', content: userText }],
+        max_tokens: 1024,
       });
     },
     async runStream(userText: string, onData: (chunk: string) => void) {
@@ -26,15 +24,12 @@ export async function initAgent() {
         client,
         {
           model: config.claudeModel,
-          messages: [
-            {
-              role: 'user',
-              content: userText,
-            },
-          ],
+          messages: [{ role: 'user', content: userText }],
+          max_tokens: 1024,
         },
         onData,
       );
     },
   };
 }
+
