@@ -30,7 +30,7 @@ describe('createRunner', () => {
       return 'ok';
     });
 
-    const client = { call, callStream: vi.fn() } as unknown as ClaudeClient;
+    const client = { call, callStream: vi.fn() } as unknown as ClaudeClient; // 强制断言简化测试
     const runner = createRunner(client, {
       model: 'claude-sonnet-4-6',
       maxTokens: 1024,
