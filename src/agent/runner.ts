@@ -12,6 +12,7 @@ export interface RunnerDefaults {
   model?: string;
   maxTokens?: number;
   maxTurns?: number;
+  systemPrompt?: string;
 }
 
 // 对工具对象处理，防止有些代理对参数比较严格，像input_example等不能直接传入，需要过滤掉一些字段
@@ -73,7 +74,8 @@ export async function runRequestStreamWithTools(
 }
 
 export function createRunner(client: ClaudeClient, defaults: RunnerDefaults = {}): Agent {
-  systemPrompt: buildSystemPrompt(''); // 预构建一次系统提示词，避免每次调用时都构建，可以提升性能
+  const defaultSystem = defaults.systemPrompt ?? buildSystemPrompt();
+
   return {
     async run(userText: string, options: RunOptions = {}) {
       const request: RequestBody = {
@@ -82,8 +84,7 @@ export function createRunner(client: ClaudeClient, defaults: RunnerDefaults = {}
         max_tokens: options.maxTokens ?? defaults.maxTokens ?? 1024,
         tools: options.tools,
         tool_choice: options.tool_choice,
-        // 注入系统提示词，构建函数在src/agent/prompt.ts中定义，根据用户输入构建完整的提示词内容
-        system_prompt: options.systemPrompt,
+        system: options.systemPrompt ?? defaultSystem,
       };
 
       return runRequestWithTools(client, request, {
@@ -101,8 +102,7 @@ export function createRunner(client: ClaudeClient, defaults: RunnerDefaults = {}
         max_tokens: options.maxTokens ?? defaults.maxTokens ?? 1024,
         tools: options.tools,
         tool_choice: options.tool_choice,
-        // 注入系统提示词，构建函数在src/agent/prompt.ts中定义，根据用户输入构建完整的提示词内容
-        system_prompt: options.systemPrompt,
+        system: options.systemPrompt ?? defaultSystem,
       };
 
       return runRequestStreamWithTools(client, request, onData, {
