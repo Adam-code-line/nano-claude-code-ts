@@ -1,11 +1,13 @@
-// 入口文件
-
-import { initConfig } from './src/config/init.ts';
-// 导入初始化配置函数
+import { initAgent } from './src/agent/init.ts';
 
 async function main() {
-  const config = await initConfig();
-  console.log('Initialized config:', config);
+  const { run } = await initAgent();
+  const input = process.argv.slice(2).join(' ').trim() || 'Hello, Claude!';
+  const result = await run(input);
+  console.log(result.text);
 }
 
-main();
+main().catch((error) => {
+  console.error('Agent run failed:', error);
+  process.exitCode = 1;
+});

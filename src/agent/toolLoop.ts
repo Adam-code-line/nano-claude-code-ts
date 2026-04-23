@@ -1,21 +1,28 @@
-// 工具循环
-import { RequestBody } from '../types/request.ts';
-import { Conversation } from '../models/conversation.ts';
+import type { MessageParam, RequestBody } from '../types/request.ts';
+import type { Tool } from '../types/tools.ts';
 import type { ToolResultBlock, ToolUseBlock } from '../types/response.ts';
+import type { ToolLoopResult } from './types.ts';
+import type { ClaudeClient } from '../llm/client.ts';
+import { Conversation } from '../models/conversation.ts';
 import { executeTool } from '../tools/execute.ts';
 
-interface LoopDeps {
-  callOnce: (req: RequestBody, conv: Conversation) => Promise<string | void>;
-  readLatestText: (conv: Conversation) => string;
+export interface ToolLoopParams {
+  client: ClaudeClient;
+  request: RequestBody;
+  conversation: Conversation;
+  tools: Tool[];
+  initialToolChoice: RequestBody['tool_choice'];
+  maxTurns: number;
+  onData?: (chunk: string) => void;
 }
 
 function getLatestToolUses(conversation: Conversation): ToolUseBlock[] {
   const latest = conversation.rawResponses[conversation.rawResponses.length - 1];
   if (!latest) return [];
-  return latest.content.filter((b: any) => b?.type === 'tool_use') as ToolUseBlock[];
+  return latest.content.filter((block): block is ToolUseBlock => block?.type === 'tool_use');
 }
 
-function normalizeToolResultContent(result: any): string {
+function normalizeToolResultContent(result: unknown): string {
   if (typeof result === 'string') return result;
   try {
     return JSON.stringify(result);
@@ -49,38 +56,50 @@ async function buildToolResults(toolUses: ToolUseBlock[]): Promise<ToolResultBlo
   return results;
 }
 
-export async function runToolLoop(
-  deps: LoopDeps,
-  initialRequest: RequestBody,
-  conversation: Conversation,
-  maxTurns = 8,
-): Promise<RunResult> {
-  let messagesToSync = initialRequest.messages || [];
-  let latestText = '';
+async function callTurn(
+  params: ToolLoopParams,
+  turnRequest: RequestBody,
+): Promise<string | undefined> {
+  if (params.onData) {
+    await params.client.callStream(turnRequest, params.onData, params.conversation);
+    return params.conversation.getLatestTextContent();
+  }
 
-  for (let turn = 0; turn < maxTurns; turn++) {
-    const req: RequestBody = {
-      ...initialRequest,
+  return params.client.call(turnRequest, params.conversation);
+}
+
+export async function runToolLoop(params: ToolLoopParams): Promise<ToolLoopResult> {
+  const maxTurns = params.maxTurns ?? 8;
+  let latestText = '';
+  let messagesToSync: MessageParam[] = params.request.messages;
+
+  for (let turn = 1; turn <= maxTurns; turn++) {
+    const tool_choice = turn === 1 ? params.initialToolChoice : ({ type: 'auto' } as const);
+
+    const turnRequest: RequestBody = {
+      ...params.request,
       messages: messagesToSync,
+      tools: params.tools,
+      tool_choice,
     };
-    const out = await deps.callOnce(req, conversation);
-    if (typeof out === 'string') {
-      latestText = out;
+
+    const outputText = await callTurn(params, turnRequest);
+    if (typeof outputText === 'string') {
+      latestText = outputText;
     }
-    const toolUses = getLatestToolUses(conversation);
+
+    const toolUses = getLatestToolUses(params.conversation);
     if (toolUses.length === 0) {
-      // 没有工具调用了，继续下一轮对话
       return {
-        text: latestText || deps.readLatestText(conversation),
-        conversation,
+        text: latestText || params.conversation.getLatestTextContent(),
+        conversation: params.conversation,
         turns: turn,
       };
     }
+
     const toolResults = await buildToolResults(toolUses);
-    // 将工具结果添加到对话中，供下一轮调用
-    toolResults.forEach((res) => conversation.addMessage(res));
-    // 准备下一轮的输入消息
-    messagesToSync = conversation.history.map((msg) => msg.toRequestMessage());
+    messagesToSync = [{ role: 'user', content: toolResults }];
   }
-  throw new Error('Exceeded maximum tool loop turns');
+
+  throw new Error(`tool-loop exceeded max turns (maxTurns=${maxTurns})`);
 }

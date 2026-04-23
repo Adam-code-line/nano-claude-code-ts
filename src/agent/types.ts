@@ -20,6 +20,8 @@ export interface RunOptions {
   maxTurns?: number;
   maxTokens?: number;
   conversation?: Conversation;
+  tools?: Tool[];
+  tool_choice?: RequestBody['tool_choice'];
 }
 
 export interface RunResult {
