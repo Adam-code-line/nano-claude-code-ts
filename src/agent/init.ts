@@ -1,7 +1,6 @@
 import { initConfig } from '../config/init.ts';
 import { ClaudeClient } from '../llm/client.ts';
 import { initTools } from '../tools/init.ts';
-import { buildSystemPrompt } from './prompt.ts';
 import { createRunner } from './runner.ts';
 
 export async function initAgent() {
@@ -17,7 +16,6 @@ export async function initAgent() {
     model: config.claudeModel,
     maxTokens: 1024,
     maxTurns: 8,
-    systemPrompt: buildSystemPrompt(),
   });
 
   return {

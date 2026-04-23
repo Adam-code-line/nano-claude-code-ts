@@ -74,8 +74,6 @@ export async function runRequestStreamWithTools(
 }
 
 export function createRunner(client: ClaudeClient, defaults: RunnerDefaults = {}): Agent {
-  const defaultSystem = defaults.systemPrompt ?? buildSystemPrompt();
-
   return {
     async run(userText: string, options: RunOptions = {}) {
       const request: RequestBody = {
@@ -84,7 +82,7 @@ export function createRunner(client: ClaudeClient, defaults: RunnerDefaults = {}
         max_tokens: options.maxTokens ?? defaults.maxTokens ?? 1024,
         tools: options.tools,
         tool_choice: options.tool_choice,
-        system: options.systemPrompt ?? defaultSystem,
+        system: options.systemPrompt ?? defaults.systemPrompt ?? buildSystemPrompt(),
       };
 
       return runRequestWithTools(client, request, {
@@ -102,7 +100,7 @@ export function createRunner(client: ClaudeClient, defaults: RunnerDefaults = {}
         max_tokens: options.maxTokens ?? defaults.maxTokens ?? 1024,
         tools: options.tools,
         tool_choice: options.tool_choice,
-        system: options.systemPrompt ?? defaultSystem,
+        system: options.systemPrompt ?? defaults.systemPrompt ?? buildSystemPrompt(),
       };
 
       return runRequestStreamWithTools(client, request, onData, {
