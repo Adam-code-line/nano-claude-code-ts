@@ -7,6 +7,9 @@ settings:
 importers:
   .:
     dependencies:
+      commander:
+        specifier: ^14.0.3
+        version: 14.0.3
       dotenv:
         specifier: ^17.4.0
         version: 17.4.0
@@ -973,6 +976,13 @@ packages:
         integrity: sha512-NUPRluOfOiTKBKvWPtSD4PhFvWCqOi0BGStNWs57X9js7XGTprSmFoz5F0tWhR4WPjNeR9jXqdC7/UpSJTnlRg==,
       }
     engines: { node: '>=18' }
+
+  commander@14.0.3:
+    resolution:
+      {
+        integrity: sha512-H+y0Jo/T1RZ9qPP4Eh1pkcQcLRglraJaSLoyOtHxu6AapkjWVCy2Sit1QQ4x3Dng8qDlSsZEet7g5Pq06MvTgw==,
+      }
+    engines: { node: '>=20' }
 
   convert-source-map@2.0.0:
     resolution:
@@ -2552,6 +2562,8 @@ snapshots:
       balanced-match: 4.0.4
 
   chai@6.2.2: {}
+
+  commander@14.0.3: {}
 
   convert-source-map@2.0.0: {}
 
