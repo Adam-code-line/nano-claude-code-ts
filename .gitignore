@@ -40,3 +40,6 @@ coverage/
 # --- 缓存 ---
 .eslintcache
 .prettiercache
+
+# --- 会话持久化 ---
+.nano-claude/
