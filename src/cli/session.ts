@@ -1,7 +1,7 @@
 // CLI会话持久化：对conversation进行存储和恢复，支持多轮对话的上下文保持
 import { mkdir, readFile, writeFile, readdir } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
-import { Conversation, type SerializedConversation } from '../models/conversation.ts';
+import { Conversation, type SerializedConversation } from '../models/conversation.js';
 
 // 存储会话的接口，定义了保存和加载会话的方法
 export interface SessionStorage {

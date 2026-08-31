@@ -1,10 +1,10 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import type { ClaudeClient } from '../src/llm/client.ts';
-import { Conversation } from '../src/models/conversation.ts';
-import { runToolLoop } from '../src/agent/toolLoop.ts';
-import type { ResponseBody, ContentBlock } from '../src/types/response.ts';
-import type { RequestBody } from '../src/types/request.ts';
-import * as executeModule from '../src/tools/execute.ts';
+import type { ClaudeClient } from '../src/llm/client.js';
+import { Conversation } from '../src/models/conversation.js';
+import { runToolLoop } from '../src/agent/toolLoop.js';
+import type { ResponseBody, ContentBlock } from '../src/types/response.js';
+import type { RequestBody } from '../src/types/request.js';
+import * as executeModule from '../src/tools/execute.js';
 
 function makeResponse(
   content: ContentBlock[],

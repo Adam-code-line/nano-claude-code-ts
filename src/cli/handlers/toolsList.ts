@@ -1,8 +1,8 @@
-import { initTools } from '../../tools/init.ts';
-import { getToolsForRequest } from '../../tools/registry.ts';
-import type { Tool } from '../../types/tools.ts';
-import type { CliContext, CliExitCode, ToolsListOptions } from '../types.ts';
-import { CLI_EXIT_CODE } from '../types.ts';
+import { initTools } from '../../tools/init.js';
+import { getToolsForRequest } from '../../tools/registry.js';
+import type { Tool } from '../../types/tools.js';
+import type { CliContext, CliExitCode, ToolsListOptions } from '../types.js';
+import { CLI_EXIT_CODE } from '../types.js';
 
 function getToolLabel(tool: Tool): string {
   if ('name' in tool && tool.name) return tool.name;

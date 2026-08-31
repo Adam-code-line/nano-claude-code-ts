@@ -1,7 +1,7 @@
-import { initConfig } from '../config/init.ts';
-import { ClaudeClient } from '../llm/client.ts';
-import { initTools } from '../tools/init.ts';
-import { createRunner } from './runner.ts';
+import { initConfig } from '../config/init.js';
+import { ClaudeClient } from '../llm/client.js';
+import { initTools } from '../tools/init.js';
+import { createRunner } from './runner.js';
 
 export async function initAgent() {
   const config = await initConfig();

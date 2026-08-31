@@ -1,7 +1,7 @@
-import type { Conversation } from '../models/conversation.ts';
-import type { RequestBody } from '../types/request.ts';
-import type { Tool } from '../types/tools.ts';
-import type { ClaudeStreamDebugEvent } from '../llm/call.ts';
+import type { Conversation } from '../models/conversation.js';
+import type { RequestBody } from '../types/request.js';
+import type { Tool } from '../types/tools.js';
+import type { ClaudeStreamDebugEvent } from '../llm/call.js';
 
 export interface ToolLoopOptions {
   conversation?: Conversation;

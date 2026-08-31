@@ -1,9 +1,9 @@
-import { Message } from '../models/message.ts';
-import { HttpClient } from './httpClient.ts';
-import { RequestBody, RequestHeader } from '../types/request.ts';
-import { ContentBlock, ResponseBody } from '../types/response.ts';
-import { Conversation } from '../models/conversation.ts';
-import { ClaudeClientOptions } from '../types/client.ts';
+import { Message } from '../models/message.js';
+import { HttpClient } from './httpClient.js';
+import { RequestBody, RequestHeader } from '../types/request.js';
+import { ContentBlock, ResponseBody } from '../types/response.js';
+import { Conversation } from '../models/conversation.js';
+import { ClaudeClientOptions } from '../types/client.js';
 
 // 将请求头、上下文拼接、流式事件解析封装在这里
 export type ClaudeStreamDebugEvent =

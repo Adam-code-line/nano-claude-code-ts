@@ -1,9 +1,9 @@
-import { HttpClient } from './httpClient.ts';
-import { ClaudeCall, type ClaudeStreamDebugEvent } from './call.ts';
-import { RequestBody } from '../types/request.ts';
-import { Conversation } from '../models/conversation.ts';
-import { ClaudeClientOptions } from '../types/client.ts';
-import { ModelRegistry } from '../models/registry.ts';
+import { HttpClient } from './httpClient.js';
+import { ClaudeCall, type ClaudeStreamDebugEvent } from './call.js';
+import { RequestBody } from '../types/request.js';
+import { Conversation } from '../models/conversation.js';
+import { ClaudeClientOptions } from '../types/client.js';
+import { ModelRegistry } from '../models/registry.js';
 
 export class ClaudeClient {
   private baseURL: string;

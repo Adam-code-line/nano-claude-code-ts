@@ -2,9 +2,9 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { mkdtemp, rm, readFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { Conversation } from '../src/models/conversation.ts';
-import { Message } from '../src/models/message.ts';
-import { FileSessionStorage, FileSessionStore, SessionManager } from '../src/cli/session.ts';
+import { Conversation } from '../src/models/conversation.js';
+import { Message } from '../src/models/message.js';
+import { FileSessionStorage, FileSessionStore, SessionManager } from '../src/cli/session.js';
 
 describe('Conversation serialization', () => {
   it('should round-trip history and rawResponses via toJSON/fromJSON', () => {

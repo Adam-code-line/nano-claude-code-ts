@@ -2,12 +2,12 @@ import { Command } from 'commander';
 import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { createPrinter } from './printer.ts';
-import { registerChatCommand } from './commands/chat.ts';
-import { registerDoctorCommand } from './commands/doctor.ts';
-import { registerReplCommand } from './commands/repl.ts';
-import { registerToolsCommand } from './commands/tools.ts';
-import type { CliContext, GlobalCliOptions } from './types.ts';
+import { createPrinter } from './printer.js';
+import { registerChatCommand } from './commands/chat.js';
+import { registerDoctorCommand } from './commands/doctor.js';
+import { registerReplCommand } from './commands/repl.js';
+import { registerToolsCommand } from './commands/tools.js';
+import type { CliContext, GlobalCliOptions } from './types.js';
 
 function readVersionFromPackageJson(): string {
   const currentDir = dirname(fileURLToPath(import.meta.url));

@@ -8,14 +8,14 @@
 
 import readline from 'node:readline/promises'; // 使用node原生的readline模块的promise版本来处理用户输入
 import { stdin as input, stdout as output } from 'node:process';
-import { initAgent } from '../agent/init.ts';
-import { Conversation } from '../models/conversation.ts';
-import { getToolsForRequest } from '../tools/registry.ts';
-import type { Tool } from '../types/tools.ts';
-import { createPrinter } from './printer.ts';
-import { CLI_EXIT_CODE } from './types.ts';
-import type { CliExitCode, Printer } from './types.ts';
-import { FileSessionStore, SessionManager } from './session.ts';
+import { initAgent } from '../agent/init.js';
+import { Conversation } from '../models/conversation.js';
+import { getToolsForRequest } from '../tools/registry.js';
+import type { Tool } from '../types/tools.js';
+import { createPrinter } from './printer.js';
+import { CLI_EXIT_CODE } from './types.js';
+import type { CliExitCode, Printer } from './types.js';
+import { FileSessionStore, SessionManager } from './session.js';
 import { resolve } from 'node:path';
 
 export interface ReplStartOptions {

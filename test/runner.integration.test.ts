@@ -1,5 +1,5 @@
-import { runRequestWithTools } from '../src/agent/runner.ts';
-import { ClaudeClient } from '../src/llm/client.ts';
+import { runRequestWithTools } from '../src/agent/runner.js';
+import { ClaudeClient } from '../src/llm/client.js';
 import * as dotenv from 'dotenv';
 
 dotenv.config();

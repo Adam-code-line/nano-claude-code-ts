@@ -1,6 +1,6 @@
 // 定义 claude 消息类
-import { MessageParam } from '../types/request.ts';
-import { ContentBlock, ResponseBody } from '../types/response.ts';
+import { MessageParam } from '../types/request.js';
+import { ContentBlock, ResponseBody } from '../types/response.js';
 
 export class Message {
   role: 'user' | 'assistant';

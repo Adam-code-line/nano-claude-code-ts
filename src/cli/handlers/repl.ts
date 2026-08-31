@@ -1,6 +1,6 @@
-import { startRepl } from '../repl.ts';
-import type { CliContext, CliExitCode, ReplCommandOptions } from '../types.ts';
-import { CLI_EXIT_CODE } from '../types.ts';
+import { startRepl } from '../repl.js';
+import type { CliContext, CliExitCode, ReplCommandOptions } from '../types.js';
+import { CLI_EXIT_CODE } from '../types.js';
 
 export async function runRepl(options: ReplCommandOptions, ctx: CliContext): Promise<CliExitCode> {
   try {

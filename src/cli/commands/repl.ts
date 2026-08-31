@@ -1,6 +1,6 @@
 import type { Command } from 'commander';
-import { runRepl } from '../handlers/repl.ts';
-import type { CliContextFactory, ReplCommandOptions } from '../types.ts';
+import { runRepl } from '../handlers/repl.js';
+import type { CliContextFactory, ReplCommandOptions } from '../types.js';
 
 export function registerReplCommand(program: Command, createContext: CliContextFactory): void {
   program

@@ -1,12 +1,12 @@
-import type { RequestBody } from '../types/request.ts';
-import type { Tool } from '../types/tools.ts';
-import type { ClaudeClient } from '../llm/client.ts';
-import { Conversation } from '../models/conversation.ts';
-import { getToolsForRequest, sanitizeToolsForRequest } from '../tools/registry.ts';
-import { initTools } from '../tools/init.ts';
-import { runToolLoop } from './toolLoop.ts';
-import type { Agent, RunOptions, ToolLoopOptions, ToolLoopResult } from './types.ts';
-import { buildSystemPrompt } from './prompt.ts';
+import type { RequestBody } from '../types/request.js';
+import type { Tool } from '../types/tools.js';
+import type { ClaudeClient } from '../llm/client.js';
+import { Conversation } from '../models/conversation.js';
+import { getToolsForRequest, sanitizeToolsForRequest } from '../tools/registry.js';
+import { initTools } from '../tools/init.js';
+import { runToolLoop } from './toolLoop.js';
+import type { Agent, RunOptions, ToolLoopOptions, ToolLoopResult } from './types.js';
+import { buildSystemPrompt } from './prompt.js';
 
 export interface RunnerDefaults {
   model?: string;

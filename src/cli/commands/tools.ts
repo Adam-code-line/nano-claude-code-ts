@@ -1,6 +1,6 @@
 import type { Command } from 'commander';
-import { runToolsList } from '../handlers/toolsList.ts';
-import type { CliContextFactory, ToolsListOptions } from '../types.ts';
+import { runToolsList } from '../handlers/toolsList.js';
+import type { CliContextFactory, ToolsListOptions } from '../types.js';
 
 export function registerToolsCommand(program: Command, createContext: CliContextFactory): void {
   const tools = program.command('tools').description('Inspect registered tools');

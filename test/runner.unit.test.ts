@@ -1,11 +1,11 @@
 import { describe, it, expect, vi } from 'vitest';
-import type { ClaudeClient } from '../src/llm/client.ts';
-import { Conversation } from '../src/models/conversation.ts';
-import { Message } from '../src/models/message.ts';
-import { createRunner } from '../src/agent/runner.ts';
-import type { RequestBody } from '../src/types/request.ts';
-import type { Tool } from '../src/types/tools.ts';
-import type { ResponseBody } from '../src/types/response.ts';
+import type { ClaudeClient } from '../src/llm/client.js';
+import { Conversation } from '../src/models/conversation.js';
+import { Message } from '../src/models/message.js';
+import { createRunner } from '../src/agent/runner.js';
+import type { RequestBody } from '../src/types/request.js';
+import type { Tool } from '../src/types/tools.js';
+import type { ResponseBody } from '../src/types/response.js';
 
 function makeTextResponse(text: string): ResponseBody {
   return {

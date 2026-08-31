@@ -1,6 +1,6 @@
 // 引入响应体
-import type { ContentBlock, ResponseBody, TextBlock } from '../types/response.ts';
-import { Message } from './message.ts';
+import type { ContentBlock, ResponseBody, TextBlock } from '../types/response.js';
+import { Message } from './message.js';
 
 // 可序列化的会话结构，用于持久化到磁盘
 export interface SerializedConversation {

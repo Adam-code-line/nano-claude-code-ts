@@ -1,14 +1,14 @@
 /**
  * 在这里单独设计tool loop的逻辑，主要是为了让agent的核心逻辑更清晰，同时也方便后续对tool loop进行独立的测试和优化
  */
-import type { MessageParam, RequestBody } from '../types/request.ts';
-import type { Tool } from '../types/tools.ts';
-import type { ToolResultBlock, ToolUseBlock } from '../types/response.ts';
-import type { ToolLoopResult } from './types.ts';
-import type { ClaudeClient } from '../llm/client.ts';
-import type { ClaudeStreamDebugEvent } from '../llm/call.ts';
-import { Conversation } from '../models/conversation.ts';
-import { executeTool } from '../tools/execute.ts';
+import type { MessageParam, RequestBody } from '../types/request.js';
+import type { Tool } from '../types/tools.js';
+import type { ToolResultBlock, ToolUseBlock } from '../types/response.js';
+import type { ToolLoopResult } from './types.js';
+import type { ClaudeClient } from '../llm/client.js';
+import type { ClaudeStreamDebugEvent } from '../llm/call.js';
+import { Conversation } from '../models/conversation.js';
+import { executeTool } from '../tools/execute.js';
 
 // ToolLoop需要传递ClaudeClient实例、当前的Conversation对象、工具列表、初始的工具选择参数，以及一些可选的回调函数用于处理流式数据和调试事件。ToolLoop的核心逻辑是一个循环，在每一轮中根据最新的对话状态构建请求，调用ClaudeClient进行交互，并处理工具使用块来执行工具并将结果同步回对话中，直到达到最大轮数或者没有新的工具使用块为止。
 export interface ToolLoopParams {
