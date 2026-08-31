@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 import { runCli } from './src/cli/main.js';
+import { toCliExit } from './src/errors/cliError.js';
 
 runCli().catch((error) => {
-  const message = error instanceof Error ? error.message : String(error);
+  const { message, code } = toCliExit(error);
   console.error(`CLI failed: ${message}`);
-  process.exitCode = 1;
+  process.exitCode = code;
 });
