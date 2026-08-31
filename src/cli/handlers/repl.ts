@@ -1,6 +1,6 @@
 import { startRepl } from '../repl.js';
 import type { CliContext, CliExitCode, ReplCommandOptions } from '../types.js';
-import { CLI_EXIT_CODE } from '../types.js';
+import { toCliExit } from '../../errors/cliError.js';
 
 export async function runRepl(options: ReplCommandOptions, ctx: CliContext): Promise<CliExitCode> {
   try {
@@ -10,8 +10,8 @@ export async function runRepl(options: ReplCommandOptions, ctx: CliContext): Pro
       printer: ctx.printer,
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
+    const { message, code } = toCliExit(error);
     ctx.printer.error(`repl failed: ${message}`);
-    return CLI_EXIT_CODE.RUNTIME_ERROR;
+    return code as CliExitCode;
   }
 }

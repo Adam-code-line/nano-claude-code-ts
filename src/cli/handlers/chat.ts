@@ -1,6 +1,7 @@
 import { initAgent } from '../../agent/init.js';
 import type { ChatCommandOptions, CliContext, CliExitCode } from '../types.js';
 import { CLI_EXIT_CODE } from '../types.js';
+import { toCliExit } from '../../errors/cliError.js';
 
 export async function runChat(
   prompt: string,
@@ -44,8 +45,8 @@ export async function runChat(
     ctx.printer.assistant(result.text);
     return CLI_EXIT_CODE.OK;
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
+    const { message, code } = toCliExit(error);
     ctx.printer.error(`chat failed: ${message}`);
-    return CLI_EXIT_CODE.RUNTIME_ERROR;
+    return code as CliExitCode;
   }
 }

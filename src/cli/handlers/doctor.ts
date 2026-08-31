@@ -2,6 +2,7 @@ import { initConfig, loadEnv } from '../../config/init.js';
 import { initTools } from '../../tools/init.js';
 import type { CliContext, CliExitCode, DoctorCommandOptions } from '../types.js';
 import { CLI_EXIT_CODE } from '../types.js';
+import { CliError, toCliExit } from '../../errors/cliError.js';
 
 const REQUIRED_ENV_KEYS = ['CLAUDE_BASE_URL', 'CLAUDE_API_KEY'] as const;
 
@@ -12,20 +13,14 @@ export async function runDoctor(
   loadEnv();
   const missing = REQUIRED_ENV_KEYS.filter((key) => !process.env[key]);
 
-  if (missing.length > 0) {
-    if (options.json) {
-      ctx.printer.json({ ok: false, missing });
-      return CLI_EXIT_CODE.CONFIG_ERROR;
-    }
-
-    ctx.printer.error('Missing required environment variables:');
-    for (const key of missing) {
-      ctx.printer.error(`- ${key}`);
-    }
-    return CLI_EXIT_CODE.CONFIG_ERROR;
-  }
-
   try {
+    if (missing.length > 0) {
+      throw new CliError(
+        `Missing required environment variables: ${missing.join(', ')}`,
+        CLI_EXIT_CODE.CONFIG_ERROR,
+      );
+    }
+
     await initConfig();
     initTools();
 
@@ -36,12 +31,14 @@ export async function runDoctor(
     }
     return CLI_EXIT_CODE.OK;
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
+    const { message } = toCliExit(error);
+    // doctor 的本质是校验配置：非 CliError 的失败也统一视为配置错误
+    const code = error instanceof CliError ? error.exitCode : CLI_EXIT_CODE.CONFIG_ERROR;
     if (options.json) {
       ctx.printer.json({ ok: false, error: message });
     } else {
       ctx.printer.error(`doctor failed: ${message}`);
     }
-    return CLI_EXIT_CODE.CONFIG_ERROR;
+    return code as CliExitCode;
   }
 }

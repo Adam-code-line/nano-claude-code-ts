@@ -3,6 +3,7 @@ import { getToolsForRequest } from '../../tools/registry.js';
 import type { Tool } from '../../types/tools.js';
 import type { CliContext, CliExitCode, ToolsListOptions } from '../types.js';
 import { CLI_EXIT_CODE } from '../types.js';
+import { toCliExit } from '../../errors/cliError.js';
 
 function getToolLabel(tool: Tool): string {
   if ('name' in tool && tool.name) return tool.name;
@@ -33,8 +34,8 @@ export function runToolsList(options: ToolsListOptions, ctx: CliContext): CliExi
 
     return CLI_EXIT_CODE.OK;
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
+    const { message, code } = toCliExit(error);
     ctx.printer.error(`tools list failed: ${message}`);
-    return CLI_EXIT_CODE.RUNTIME_ERROR;
+    return code as CliExitCode;
   }
 }
