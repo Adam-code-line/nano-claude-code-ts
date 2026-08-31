@@ -4,19 +4,19 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { Conversation } from '../src/models/conversation.ts';
 import { Message } from '../src/models/message.ts';
-import { FileSessionStorage, SessionManager } from '../src/cli/session.ts';
+import { FileSessionStorage, FileSessionStore, SessionManager } from '../src/cli/session.ts';
 
 describe('Conversation serialization', () => {
   it('should round-trip history and rawResponses via toJSON/fromJSON', () => {
     const original = new Conversation();
     original.addMessage(new Message('user', 'hello'));
-    original.addMessage(new Message('assistant', 'hi there' ));
+    original.addMessage(new Message('assistant', 'hi there'));
     original.rawResponses.push({
       id: 'resp-1',
       type: 'message',
       role: 'assistant',
       content: [{ type: 'text', text: 'hi there' }],
-      model: 'claude-sonnet-4-6', 
+      model: 'claude-sonnet-4-6',
       stop_reason: 'end_turn',
       stop_sequence: null,
       usage: { input_tokens: 1, output_tokens: 1 },
@@ -63,12 +63,74 @@ describe('FileSessionStorage', () => {
   });
 
   it('should work through SessionManager', async () => {
-    const manager = new SessionManager(storage);
+    const manager = new SessionManager(new FileSessionStore(dir));
     const conversation = new Conversation();
     conversation.addMessage(new Message('assistant', 'persisted via manager'));
 
     await manager.saveSession(conversation);
     const restored = await manager.loadSession();
     expect(restored?.getLatestTextContent()).toBe('persisted via manager');
+  });
+});
+
+describe('FileSessionStore / SessionManager multi-session', () => {
+  let dir: string;
+  let store: FileSessionStore;
+  let manager: SessionManager;
+
+  beforeEach(async () => {
+    dir = await mkdtemp(join(tmpdir(), 'nano-sessions-'));
+    store = new FileSessionStore(dir);
+    manager = new SessionManager(store, 'default');
+  });
+
+  afterEach(async () => {
+    await rm(dir, { recursive: true, force: true });
+  });
+
+  it('should list sessions and report the current one', async () => {
+    expect(await manager.listSessions()).toEqual([]);
+    expect(manager.currentSession).toBe('default');
+  });
+
+  it('should create, switch, and isolate multiple sessions', async () => {
+    // 默认会话写入一条消息
+    const defaultConv = new Conversation();
+    defaultConv.addMessage(new Message('user', 'in default'));
+    await manager.saveSession(defaultConv);
+
+    // 新建并切换到 project-a
+    const a = await manager.createSession('project-a');
+    a.addMessage(new Message('user', 'in project-a'));
+    await manager.saveSession(a);
+    expect(manager.currentSession).toBe('project-a');
+
+    // 新建并切换到 project-b
+    const b = await manager.createSession('project-b');
+    b.addMessage(new Message('user', 'in project-b'));
+    await manager.saveSession(b);
+    expect(manager.currentSession).toBe('project-b');
+
+    // 三个会话都存在于磁盘
+    expect(await manager.listSessions()).toEqual(['default', 'project-a', 'project-b']);
+
+    // 切回 project-a，上下文独立不串扰
+    const loadedA = await manager.useSession('project-a');
+    expect(loadedA?.getAllTextContent()).toBe('in project-a');
+    expect(manager.currentSession).toBe('project-a');
+  });
+
+  it('should return null when switching to a non-existent session', async () => {
+    expect(await manager.useSession('nope')).toBeNull();
+    expect(manager.currentSession).toBe('default');
+  });
+
+  it('should persist each session to its own file', async () => {
+    const a = await manager.createSession('alpha');
+    a.addMessage(new Message('user', 'alpha content'));
+    await manager.saveSession(a);
+
+    const raw = await readFile(join(dir, 'alpha.json'), 'utf8');
+    expect(JSON.parse(raw).history).toHaveLength(1);
   });
 });

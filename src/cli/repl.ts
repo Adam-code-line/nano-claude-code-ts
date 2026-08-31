@@ -15,7 +15,7 @@ import type { Tool } from '../types/tools.ts';
 import { createPrinter } from './printer.ts';
 import { CLI_EXIT_CODE } from './types.ts';
 import type { CliExitCode, Printer } from './types.ts';
-import { FileSessionStorage, SessionManager } from './session.ts';
+import { FileSessionStore, SessionManager } from './session.ts';
 import { resolve } from 'node:path';
 
 export interface ReplStartOptions {
@@ -27,12 +27,16 @@ export interface ReplStartOptions {
 function printHelp(printer: Printer): void {
   printer.info(`
 Commands:
-  /help           Show help
-  /tools          List registered tools
-  /stream on      Enable stream mode
-  /stream off     Disable stream mode
-  /reset          Reset conversation
-  /exit           Exit REPL
+  /help               Show help
+  /tools              List registered tools
+  /stream on          Enable stream mode
+  /stream off         Disable stream mode
+  /reset              Reset conversation
+  /session            Show current session and list all
+  /session list       List all sessions
+  /session new <id>   Create a new session and switch to it
+  /session use <id>   Switch to an existing session
+  /exit               Exit REPL
 `);
 }
 
@@ -51,11 +55,13 @@ export async function startRepl(options: ReplStartOptions = {}): Promise<CliExit
 
   // 会话持久化：启动时从磁盘恢复历史对话（如果没有则新建）
   const sessionManager = new SessionManager(
-    new FileSessionStorage(resolve(process.cwd(), '.nano-claude', 'history', 'default.json')),
+    new FileSessionStore(resolve(process.cwd(), '.nano-claude', 'history')),
   );
   let conversation = (await sessionManager.loadSession()) ?? new Conversation();
   if (conversation.history.length > 0) {
-    printer.info(`Restored previous session (${conversation.history.length} messages).`);
+    printer.info(
+      `Restored session "${sessionManager.currentSession}" (${conversation.history.length} messages).`,
+    );
   }
 
   let streamEnabled = options.streamEnabled ?? true;
@@ -109,6 +115,46 @@ export async function startRepl(options: ReplStartOptions = {}): Promise<CliExit
       if (line === '/stream off') {
         streamEnabled = false;
         printer.info('Stream mode disabled.');
+        continue;
+      }
+
+      // 查看当前会话与所有会话
+      if (line === '/session' || line === '/session list') {
+        const sessions = await sessionManager.listSessions();
+        printer.info(`Current session: ${sessionManager.currentSession}`);
+        if (sessions.length === 0) {
+          printer.info('No sessions yet.');
+        } else {
+          printer.info('Sessions:');
+          for (const id of sessions) {
+            printer.info(`- ${id}${id === sessionManager.currentSession ? ' (current)' : ''}`);
+          }
+        }
+        continue;
+      }
+
+      // 新建会话并切换
+      const sessionNewMatch = line.match(/^\/session new\s+(\S+)$/);
+      if (sessionNewMatch) {
+        const id = sessionNewMatch[1];
+        await sessionManager.saveSession(conversation); // 先保存当前会话
+        conversation = await sessionManager.createSession(id);
+        printer.info(`Created and switched to session: ${id}`);
+        continue;
+      }
+
+      // 切换到已有会话
+      const sessionUseMatch = line.match(/^\/session use\s+(\S+)$/);
+      if (sessionUseMatch) {
+        const id = sessionUseMatch[1];
+        await sessionManager.saveSession(conversation); // 先保存当前会话
+        const loaded = await sessionManager.useSession(id);
+        if (loaded) {
+          conversation = loaded;
+          printer.info(`Switched to session: ${id} (${conversation.history.length} messages).`);
+        } else {
+          printer.warn(`Session not found: ${id}`);
+        }
         continue;
       }
 
