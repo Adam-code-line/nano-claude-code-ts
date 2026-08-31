@@ -58,6 +58,7 @@ export class ClaudeCall {
     );
   }
 
+  // 上下文准备：拼接请求头、构造完整上下文
   private prepareContext(requestBody: RequestBody, conversation: Conversation) {
     const endpoint = '/v1/messages';
     const finalModel = requestBody.model ?? this.model;
@@ -74,7 +75,8 @@ export class ClaudeCall {
     // 1. 同步当前请求消息到本地会话（避免重复写入）
     requestBody.messages.forEach((msg) => {
       const isAlreadyInHistory = conversation.history.some(
-        (h) => h.role === msg.role && h.content === msg.content,
+        (h) => h.role === msg.role && JSON.stringify(h.content) === JSON.stringify(msg.content),
+        // 使用逻辑比较可能导致复杂对象比较失败，换为json字符串比较
       );
       if (!isAlreadyInHistory) {
         const messageInstance = msg instanceof Message ? msg : new Message(msg.role, msg.content);
@@ -148,7 +150,7 @@ export class ClaudeCall {
       // 3. 开始执行流式请求，逐行解析 SSE
       await this.httpClient.postStream(endpoint, body, headers, (chunk) => {
         buffer += chunk;
-        const lines = buffer.split(/\r?\n/);
+        const lines = buffer.split(/\r?\n/); // 按行分割，SSE 协议每行以 \n 或 \r\n 结尾
         // 最后一行可能是不完整 JSON，留待下一批 chunk 继续拼
         buffer = lines.pop() || '';
 
@@ -157,11 +159,11 @@ export class ClaudeCall {
           // 过滤非 data 行（event/ping/空行）
           if (!trimmedLine || !trimmedLine.startsWith('data:')) continue;
 
-          const jsonStr = trimmedLine.replace(/^data:\s*/, '');
-          if (!jsonStr || jsonStr === '[DONE]') continue;
+          const jsonStr = trimmedLine.replace(/^data:\s*/, ''); // 去掉前缀 data:，得到纯 JSON 字符串
+          if (!jsonStr || jsonStr === '[DONE]') continue; // 忽略空行和结束标志
 
           try {
-            const eventData = JSON.parse(jsonStr);
+            const eventData = JSON.parse(jsonStr); // 反序列化为对象，可能是 message_start / content_block_delta / message_stop 等事件
 
             switch (eventData.type) {
               case 'message_start':

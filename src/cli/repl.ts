@@ -6,7 +6,7 @@
  * 同时，REPL 还会捕获并打印任何执行过程中发生的错误。
  */
 
-import readline from 'node:readline/promises';
+import readline from 'node:readline/promises'; // 使用node原生的readline模块的promise版本来处理用户输入
 import { stdin as input, stdout as output } from 'node:process';
 import { initAgent } from '../agent/init.ts';
 import { Conversation } from '../models/conversation.ts';
@@ -15,6 +15,8 @@ import type { Tool } from '../types/tools.ts';
 import { createPrinter } from './printer.ts';
 import { CLI_EXIT_CODE } from './types.ts';
 import type { CliExitCode, Printer } from './types.ts';
+import { FileSessionStorage, SessionManager } from './session.ts';
+import { resolve } from 'node:path';
 
 export interface ReplStartOptions {
   model?: string;
@@ -40,13 +42,22 @@ function getToolLabel(tool: Tool): string {
   return 'unknown';
 }
 
+// REPL 主循环，处理用户输入并调用 run 或 runStream 来执行输入
 export async function startRepl(options: ReplStartOptions = {}): Promise<CliExitCode> {
   const { run, runStream } = await initAgent(); // 这里复用了agent的逻辑，保持cli和agent的核心逻辑一致
   const rl = readline.createInterface({ input, output }); // 创建 readline 接口，接收用户输入并输出到控制台
 
-  const printer = options.printer ?? createPrinter();
+  const printer = options.printer ?? createPrinter(); // 创建一个printer，用于在REPL中输出信息、警告、错误等
 
-  let conversation = new Conversation();
+  // 会话持久化：启动时从磁盘恢复历史对话（如果没有则新建）
+  const sessionManager = new SessionManager(
+    new FileSessionStorage(resolve(process.cwd(), '.nano-claude', 'history', 'default.json')),
+  );
+  let conversation = (await sessionManager.loadSession()) ?? new Conversation();
+  if (conversation.history.length > 0) {
+    printer.info(`Restored previous session (${conversation.history.length} messages).`);
+  }
+
   let streamEnabled = options.streamEnabled ?? true;
 
   printer.info('Nano Claude Code REPL');
@@ -56,8 +67,10 @@ export async function startRepl(options: ReplStartOptions = {}): Promise<CliExit
     const line = (await rl.question('> ')).trim();
     if (!line) continue;
 
+    // 处理以 / 开头的命令
     if (line.startsWith('/')) {
       if (line === '/exit') {
+        await sessionManager.saveSession(conversation);
         rl.close();
         break;
       }
@@ -69,6 +82,7 @@ export async function startRepl(options: ReplStartOptions = {}): Promise<CliExit
 
       if (line === '/reset') {
         conversation = new Conversation();
+        await sessionManager.saveSession(conversation);
         printer.info('Conversation reset.');
         continue;
       }
@@ -103,6 +117,7 @@ export async function startRepl(options: ReplStartOptions = {}): Promise<CliExit
     }
 
     try {
+      // 根据 streamEnabled 的值决定是调用 run 还是 runStream 来执行用户输入
       if (streamEnabled) {
         await runStream(
           line,
@@ -118,9 +133,11 @@ export async function startRepl(options: ReplStartOptions = {}): Promise<CliExit
           },
         );
         printer.newline();
+        await sessionManager.saveSession(conversation);
       } else {
         const result = await run(line, { conversation, model: options.model });
         printer.assistant(result.text);
+        await sessionManager.saveSession(conversation);
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);

@@ -21,8 +21,8 @@ export class HttpClient {
     timeout: number = 30000,
   ): Promise<Response> {
     const url = this.buildUrl(endpoint);
-    const controller = new AbortController(); // 创建一个AbortController实例，用于控制请求的取消
-    const timeoutId = setTimeout(() => controller.abort(), timeout);
+    const controller = new AbortController(); // 创建一个AbortController实例(js内置控制器)，用于控制请求的取消
+    const timeoutId = setTimeout(() => controller.abort(), timeout); // 设置超时定时器，超过指定时间后调用abort()取消请求
     try {
       const response = await fetch(url, {
         ...options,
@@ -31,7 +31,7 @@ export class HttpClient {
           ...options.headers,
         },
       });
-      clearTimeout(timeoutId);
+      clearTimeout(timeoutId); //请求成功后清除定时器，避免内存泄漏
       if (!response.ok) {
         const errorText = await response.text();
         throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
@@ -85,27 +85,27 @@ export class HttpClient {
       timeout,
     );
 
-    const reader = response.body?.getReader();
+    const reader = response.body?.getReader(); // response.body是一个ReadableStream对象，getReader()方法返回一个ReadableStreamDefaultReader对象，用于读取流数据
     if (!reader) {
       throw new Error('无法获取响应流');
     }
 
-    const decoder = new TextDecoder();
+    const decoder = new TextDecoder(); // 创建一个TextDecoder实例，用于将Uint8Array解码为string
     while (true) {
       const { done, value } = await reader.read();
-      if (done) break;
+      if (done) break; // 网络层面的流式传输结束，退出循环
       const chunk = decoder.decode(value, { stream: true });
       onData(chunk);
     }
   }
 
   // 封装GET请求，复用executeFetch方法
-  async Get<T>(
+  async get<T>(
     endpoint: string,
     headers: Record<string, string> = {},
     timeout?: number,
   ): Promise<T> {
     const response = await this.executeFetch(endpoint, { method: 'GET', headers }, timeout);
-    return (await response.json()) as T;
+    return (await response.json()) as T; // 将响应体解析为JSON并返回
   }
 }
